@@ -79,7 +79,20 @@ async def main():
             logger.success(f"{i.result()}")
 
 
-asyncio.run(main())
-
-
 ########################################################################################
+# Пример с импользолванием wait_for(awaitable, timeout)
+async def fun():
+    await asyncio.sleep(3)
+    return "Hello word"
+
+
+async def main():
+    try:
+        wait_task = await asyncio.wait_for(fun(), timeout=1)
+    except TimeoutError:
+        print("Не успел закончится")
+    else:
+        print(wait_task)
+
+
+asyncio.run(main())
