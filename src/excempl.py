@@ -63,4 +63,95 @@ async def main():
     await asyncio.gather(*list_task)
 
 
-asyncio.run(main())
+##########################################################################################
+
+
+async def long_run_task(name: str, delay: int, future: asyncio.Future):
+    print(f"work {name} working {delay}")
+    await asyncio.sleep(delay)
+    res = "data_res"
+    print(f"end work {name}")
+    future.set_result(res)
+
+
+async def get_res(res):
+
+    if res == "data_res":
+        print("Начали работу счетчика")
+        for i in range(10):
+            await asyncio.sleep(1)
+            print(i)
+    else:
+        print("преключения")
+        await asyncio.sleep(0)
+
+
+async def run_task():
+    future = asyncio.Future()  # создали пустой обект
+    await long_run_task("Work_1", 3, future)
+    re = future.result()
+    await get_res(re)
+
+
+########################################################################################333
+
+
+async def read_book(student, time):
+    print(f"{student} начал читать книгу.")
+    await asyncio.sleep(time)
+    print(f"{student} закончил читать книгу за {time} секунд.")
+
+
+async def main():
+    task = asyncio.create_task(read_book("Алекс", 5))
+    asyncio.create_task(read_book("Мария", 3))
+    asyncio.create_task(read_book("Иван", 4))
+
+
+##########################################################################################
+####Марафон знаний
+students = {
+    "Алекс": {"course": "Асинхронный Python", "steps": 515, "speed": 78},
+    "Мария": {"course": "Многопоточный Python", "steps": 431, "speed": 62},
+    "Иван": {"course": "WEB Парсинг на Python", "steps": 491, "speed": 57},
+}
+
+
+async def study_course(student, course, steps, speed):
+    print(f"{student} начал проходить курс {course}.")
+    res = steps / speed
+    await asyncio.sleep(res)
+    print(f"{student} прошел курс {course} за {round(res, 2)} ч.")
+
+
+async def main():
+    tasks = []
+    for name, par in students.items():
+        task = asyncio.create_task(
+            study_course(name, par["course"], par["steps"], par["speed"])
+        )
+        tasks.append(task)
+    await asyncio.gather(*tasks)
+
+
+#########################################################################3
+
+
+async def compute_square(x):
+    print(f"Вычисляем квадрат числа: {x}")
+    await asyncio.sleep(1)  # Имитация длительной операции
+    return x * x
+
+
+async def m():
+
+    task = [asyncio.create_task(compute_square(i), name="my_task") for i in range(10)]
+    for i in task:
+        print(f"{i.get_name()}")
+    tasks = await asyncio.gather(*task)
+    print(tasks)
+    for result in tasks:
+        print(f"Результат: {result}")
+
+
+asyncio.run(m())
