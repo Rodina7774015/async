@@ -1,6 +1,8 @@
 import asyncio
 from time import time
 
+from loguru import logger
+
 
 async def f(time_sl: int) -> None:
     """Пробная корутина"""
@@ -51,16 +53,46 @@ async def main():
 
 
 async def print_with_delay(number_coro: int):
-    await asyncio.sleep(1)
-    print(f"Coroutine {number_coro} is done")
+    await asyncio.sleep(2)
+    if number_coro == 5:
+        raise ValueError("Не корректное значение ")
+    return f"Coroutine {number_coro} is done"
 
 
 async def main():
     list_task = []
     for i in range(10):
-        task = asyncio.create_task(print_with_delay(i))
+        task = asyncio.create_task(print_with_delay(i), name=f"Задача {i}")
         list_task.append(task)
-    await asyncio.gather(*list_task)
+    try:
+        await asyncio.gather(*list_task)
+    # ------------------------Этот блок используеться вместо return_excrpt в gather()---------#
+    except Exception:
+        await asyncio.sleep(2)
+        for i in list_task:
+            try:
+                logger.success(f"{i.result()}")
+            except Exception as a:
+                logger.warning(f"{i.get_name()}-{a}")
+    else:
+        for i in list_task:
+            logger.success(f"{i.result()}")
+
+
+########################################################################################
+# Пример с импользолванием wait_for(awaitable, timeout)
+async def fun():
+    await asyncio.sleep(3)
+    return "Hello word"
+
+
+async def main():
+    try:
+        wait_task = await asyncio.wait_for(fun(), timeout=1)
+    except TimeoutError:
+        print("Не успел закончится")
+    else:
+        print(wait_task)
 
 
 ##########################################################################################
