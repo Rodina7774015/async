@@ -11,5 +11,6 @@
     "ruff.lint.enable": true,
     "ruff.format.enable": true,
     "ruff.organizeImports": true,
-    "ruff.fixAll": true
+    "ruff.fixAll": true,
+    "python.REPL.enableREPLSmartSend": false
 }
