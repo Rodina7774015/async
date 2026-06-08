@@ -1,4 +1,5 @@
 import asyncio
+import contextvars
 import random
 from time import time
 
@@ -359,4 +360,63 @@ def event_loop(coro):
         loop.close()
 
 
-event_loop(main())
+#################################################################################################
+# Пример работы get_running_loop()
+
+
+async def my_task():
+    print("Running my task")
+    print(asyncio.get_running_loop())
+
+
+def main(my_task):
+    loop = asyncio.new_event_loop()
+    print(type(loop))
+    print(loop)
+    loop.run_until_complete(my_task)
+    loop.close()
+
+
+#####################################################################################################
+articles = [
+    {"title": "Методы картирования генома", "length": 3.2},
+    {"title": "Гормоны растений и их рост", "length": 4.5},
+    {"title": "Применение CRISPR", "length": 2.1},
+    {"title": "Микробное разнообразие", "length": 1.5},
+    {"title": "Механика деления клеток", "length": 4.1},
+    {"title": "Эпигенетическая регуляция", "length": 3.8},
+    {"title": "Динамика сворачивания белков", "length": 4.0},
+    {"title": "Экологические взаимодействия", "length": 0.7},
+    {"title": "Модели нейронных сетей", "length": 4.3},
+    {"title": "Пути биолюминесценции", "length": 2.9},
+]
+
+
+async def upload_article(article):
+    sleep_time = article.get("length")
+    await asyncio.sleep(sleep_time)
+    article["loop"] = asyncio.get_running_loop()
+    return article
+
+
+async def main():
+    list_task = []
+    list_done_task = []
+    for article in articles:
+        list_task.append(asyncio.create_task(upload_article(article)))
+    for i in list_task:
+        await i
+        if i.done:
+            list_done_task.append(i.result())
+
+    print("Все статьи успешно загружены в библиотеку")
+
+
+##################################################################################################
+
+# asyncio.to_thread()
+# Запуск выполнения блокирующих функций в отдельном потоке.
+user_context = contextvars.ContextVar("user_context")
+print(user_context.set.__doc__)
+for i in user_context.__class__.__dict__:
+    print(i)
