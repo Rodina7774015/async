@@ -537,3 +537,64 @@ async def main():
 
 
 ###########################################################################################
+
+# Словарь файлов и их размеров
+files = {
+    "file1.mp4": 32,
+    "image2.png": 24,
+    "audio3.mp3": 16,
+    "document4.pdf": 8,
+    "archive5.zip": 40,
+    "video6.mkv": 48,
+    "presentation7.pptx": 12,
+    "ebook8.pdf": 20,
+    "music9.mp3": 5,
+    "photo10.jpg": 7,
+    "script11.py": 3,
+    "database12.db": 36,
+    "archive13.rar": 15,
+    "document14.docx": 10,
+    "spreadsheet15.xls": 25,
+    "image16.gif": 2,
+    "audioBook17.mp3": 60,
+    "tutorial18.mp4": 45,
+    "code19.zip": 22,
+    "profile20.jpg": 9,
+}
+
+
+async def download_file(data) -> None:
+    time_download_file: float = files.get(data) / 8
+    print(
+        f"Начинается загрузка файла: {data}, его размер {files.get(data)} мб, время загрузки составит {time_download_file} сек"
+    )
+    await asyncio.sleep(time_download_file)
+    print(f"Загрузка завершена: {data}")
+
+
+async def monitor_tasks(tasks):
+
+    while 1:
+        all_task = True
+        for i in tasks:
+            status = "завершена" if i.done() else "в процессе"
+            print(f"Задача {i.get_name()}: {status}, Статус задачи {i.done()}")
+            if not i.done():
+                all_task = False
+        if all_task:
+            break
+
+        await asyncio.sleep(1)
+
+
+async def main():
+    tasks: list[asyncio.Task] = []
+    for file in files:
+        tasks.append(asyncio.create_task(download_file(file), name=file))
+    monitor_task = asyncio.create_task(monitor_tasks(tasks))
+    await asyncio.gather(*tasks)
+    await monitor_task
+
+
+asyncio.run(main())
+print("Все файлы успешно загружены")
