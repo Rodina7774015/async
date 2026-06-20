@@ -1,27 +1,30 @@
 import asyncio
 import contextvars
 import random
-from time import time
+import threading
+import time
+
+from loguru import logger
 
 
 async def f(time_sl: int) -> None:
     """Пробная корутина"""
-    time_sleep = time()
+    time_sleep = time.time()
     await asyncio.sleep(time_sl)
     print("В задаче ")
-    print(f"Время выполенния : {time() - time_sleep:.10f}")
+    print(f"Время выполенния : {time.time() - time_sleep:.10f}")
 
 
 async def main() -> None:
     """Точка входа асинх.приложения"""
-    time_sleep = time()
+    time_sleep = time.time()
     tasks = []
     for _ in range(10):
         task = asyncio.create_task(f(1))
         tasks.append(task)
 
     await asyncio.gather(*tasks)
-    print(f"\nВремя выполенния : {time() - time_sleep:.10f}")
+    print(f"\nВремя выполенния : {time.time() - time_sleep:.10f}")
 
 
 ###################################################################################
@@ -416,7 +419,121 @@ async def main():
 
 # asyncio.to_thread()
 # Запуск выполнения блокирующих функций в отдельном потоке.
+user_context = contextvars.ContextVar("user_context", default="unknown")
+
+
+async def authenticate_user():
+    # Устанавливаем значение контекстной переменной
+    # user_context.set(user_id)
+    await asyncio.sleep(1)  # Задержка для имитации асинхронной операции
+    print(f"User {user_context.get()} authenticated")
+
+
+async def main():
+    # Запускаем аутентификацию для разных пользователей
+    await asyncio.gather(
+        authenticate_user(),
+        authenticate_user(),
+        authenticate_user(),
+    )
+
+
+###################################################################################################
+# Пример блокирующей функции в одном потоке
+# asyncio.to_thread(func, /, *args, **kwargs)
+
+
+def blocking_fn():
+    print(
+        f"Начало блок.функции {threading.current_thread().ident} {time.strftime('%X')}"
+    )
+    time.sleep(2.59)
+    print(
+        f"Конец блок.функции {threading.current_thread().ident} {time.strftime('%X')}"
+    )
+
+
+async def sleep_fun():
+    print(
+        f"Начало асинx функции {threading.current_thread().ident} {time.strftime('%X')}"
+    )
+    await asyncio.sleep(3)
+    print(
+        f"Конец асинк.функции {threading.current_thread().ident} {time.strftime('%X')}"
+    )
+
+
+async def main():
+    print(f"Старт main в {time.strftime('%X')}")
+    coro = asyncio.to_thread(blocking_fn)
+    print(type(coro))
+    await asyncio.gather(coro, sleep_fun(), sleep_fun())
+    print(f"Завершения main {time.strftime('%X')}")
+
+
+# start = time.time()
+# asyncio.run(main())
+# print(f"{time.time() - start}")
+#######################################################################################
+
 user_context = contextvars.ContextVar("user_context")
-print(user_context.set.__doc__)
-for i in user_context.__class__.__dict__:
-    print(i)
+
+
+# Синхронная функция для логирования
+def log_authentication():
+    print(f"User {user_context.get()} authenticated")
+
+
+# Корутина для логирования
+async def log_authentication_coro():
+    print(f"User {user_context.get()} authenticated")
+
+
+async def authenticate_user(user_id):
+    print(user_id)
+    try:
+        # ВАРИАНТ 1: синхронная функция
+        # log_authentication()
+        # ВАРИАНТ 2: корутина
+        # await log_authentication_coro()
+        # ВАРИАНТ 3: задача
+        await asyncio.create_task(log_authentication_coro())
+    finally:
+        pass
+
+
+async def main():
+    await asyncio.gather(
+        authenticate_user("Alice"),
+        authenticate_user("Bob"),
+        authenticate_user("Charlie"),
+    )
+
+
+###################################################################################################
+
+order_state = contextvars.ContextVar("User_status")
+
+
+def set_order_state(state):
+    order_state.set(state)
+
+
+async def process_order(order_id):
+    list_status = ["Принят", "Обрабатывается", "Отправлен"]
+    for i in list_status:
+        set_order_state(i)
+        print(f"Заказ {order_id} сейчас в состоянии: {order_state.get()}")
+        await asyncio.sleep(random.random())
+
+
+async def main():
+    task_list = []
+    orders = ["Заказ1", "Заказ123", "Заказ12345"]
+    for i in orders:
+        task = asyncio.create_task(process_order(i))
+        task_list.append(task)
+    await asyncio.gather(*task_list)
+
+
+###########################################################################################
